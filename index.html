@@ -1601,9 +1601,10 @@ function renderAdminBanners() {
 async function saveBanner() {
   const image_url = document.getElementById('b-image').value.trim();
   if (!image_url) { showToast('⚠️ URL da imagem é obrigatória'); return; }
-  const banner={id:'b'+Date.now(),image_url,title:document.getElementById('b-title').value,subtitle:document.getElementById('b-subtitle').value,link_url:document.getElementById('b-link').value,display_order:parseInt(document.getElementById('b-order').value)||0,is_active:true};
-  if (DEMO_MODE) { state.banners.push(banner); }
-  else { const r=await (new SBQuery('banners')).post(banner); state.banners.push(r?.[0]||banner); }
+  // FIX: ID falso só no modo demo — no Supabase o UUID é gerado automaticamente pelo banco
+  const bannerData = {image_url,title:document.getElementById('b-title').value,subtitle:document.getElementById('b-subtitle').value,link_url:document.getElementById('b-link').value,display_order:parseInt(document.getElementById('b-order').value)||0,is_active:true};
+  if (DEMO_MODE) { state.banners.push({...bannerData, id:'b'+Date.now()}); }
+  else { const r=await (new SBQuery('banners')).post(bannerData); state.banners.push(r?.[0]||bannerData); }
   state.banners.sort((a,b)=>a.display_order-b.display_order);
   renderCarousel(); renderAdminBanners();
   ['b-image','b-title','b-subtitle','b-link'].forEach(id=>document.getElementById(id).value='');
