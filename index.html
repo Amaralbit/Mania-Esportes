@@ -827,8 +827,8 @@ footer p{font-size:.8rem;color:var(--grey)}
 // ============================================================
 // CONFIG — TROQUE PELA SUA URL E ANON KEY DO SUPABASE
 // ============================================================
-const SUPABASE_URL = 'https://wnqirnwvqbywwzlsevlp.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InducWlybnd2cWJ5d3d6bHNldmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNjkxNjQsImV4cCI6MjA4ODk0NTE2NH0.BDfgnvUwW5NDcHyhtYbK2Kp1d-CBxlVTVaZgvSsJQAg';
+const SUPABASE_URL = 'https://SEU_PROJETO.supabase.co';
+const SUPABASE_ANON_KEY = 'SUA_ANON_KEY_AQUI';
 
 // ============================================================
 // SUPABASE CLIENT (vanilla fetch — sem SDK)
@@ -1343,12 +1343,19 @@ function renderReviews() {
     avgEl.innerHTML = '<p style="color:var(--grey);font-size:.85rem;margin-bottom:1rem">Ainda sem avaliações. Seja o primeiro!</p>';
   }
   const formWrap = document.getElementById('review-form-wrap');
-  formWrap.style.display = state.user ? 'block' : 'none';
-  if (!state.user) {
-    const loginHint = document.createElement('p');
-    loginHint.style.cssText='font-size:.85rem;color:var(--grey);margin-bottom:1rem';
-    loginHint.innerHTML='<button onclick="closeModal();openAuth()" style="color:var(--cyan);background:none;border:none;cursor:pointer;text-decoration:underline">Entre</button> para deixar uma avaliação.';
-    formWrap.replaceWith(loginHint);
+  if (!formWrap) return;
+  if (state.user) {
+    formWrap.style.display = 'block';
+    document.getElementById('login-hint-reviews')?.remove();
+  } else {
+    formWrap.style.display = 'none';
+    if (!document.getElementById('login-hint-reviews')) {
+      const loginHint = document.createElement('p');
+      loginHint.id = 'login-hint-reviews';
+      loginHint.style.cssText = 'font-size:.85rem;color:var(--grey);margin-bottom:1rem';
+      loginHint.innerHTML = '<button onclick="closeModal();openAuth()" style="color:var(--cyan);background:none;border:none;cursor:pointer;text-decoration:underline">Entre</button> para deixar uma avaliação.';
+      formWrap.insertAdjacentElement('afterend', loginHint);
+    }
   }
   const list = document.getElementById('reviews-list');
   list.innerHTML = reviews.map(r=>`<div class="review-item">
@@ -1594,10 +1601,9 @@ function renderAdminBanners() {
 async function saveBanner() {
   const image_url = document.getElementById('b-image').value.trim();
   if (!image_url) { showToast('⚠️ URL da imagem é obrigatória'); return; }
-  // ID falso só no modo demo — no Supabase o UUID é gerado automaticamente pelo banco
-  const bannerData = {image_url,title:document.getElementById('b-title').value,subtitle:document.getElementById('b-subtitle').value,link_url:document.getElementById('b-link').value,display_order:parseInt(document.getElementById('b-order').value)||0,is_active:true};
-  if (DEMO_MODE) { state.banners.push({...bannerData, id:'b'+Date.now()}); }
-  else { const r=await (new SBQuery('banners')).post(bannerData); state.banners.push(r?.[0]||bannerData); }
+  const banner={id:'b'+Date.now(),image_url,title:document.getElementById('b-title').value,subtitle:document.getElementById('b-subtitle').value,link_url:document.getElementById('b-link').value,display_order:parseInt(document.getElementById('b-order').value)||0,is_active:true};
+  if (DEMO_MODE) { state.banners.push(banner); }
+  else { const r=await (new SBQuery('banners')).post(banner); state.banners.push(r?.[0]||banner); }
   state.banners.sort((a,b)=>a.display_order-b.display_order);
   renderCarousel(); renderAdminBanners();
   ['b-image','b-title','b-subtitle','b-link'].forEach(id=>document.getElementById(id).value='');
